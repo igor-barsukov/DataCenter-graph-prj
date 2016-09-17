@@ -123,6 +123,10 @@ public class DCGraphExecutor {
 			System.out.println("delimeter");
 		}
 		
+		//enabling source role if node belongs more than 10 edges 
+		
+		// проблема - как искать кратчайшие расстояния до каждого источника? ведь есть линки, в которые не входят источники, куда их относить? 
+		
 		for(DCNode node : nodes){
 			System.out.println("puting role for node - " + node.getId());
 			int counter = 0;
@@ -133,8 +137,10 @@ public class DCGraphExecutor {
 			}
 			System.out.println("counter - " + counter);
 			if(counter > 10){
-				//qwerty
 				System.out.println("true");
+				node.setSourceRole();
+			} else {
+				node.setReceiverRole();
 			}
 		}
 	}

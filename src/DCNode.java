@@ -28,6 +28,18 @@ public class DCNode {
 		return mark;	
 	}
 	
+	public void setSourceRole(){
+		this.role = "source";
+	}
+	
+	public void setReceiverRole(){
+		this.role = "receiver";
+	}
+	
+	public String getRole(){
+		return role;
+	}
+	
 //	@Override
 //    public boolean equals(Object object)
 //    {
