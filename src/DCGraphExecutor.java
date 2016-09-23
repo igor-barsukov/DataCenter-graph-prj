@@ -125,22 +125,61 @@ public class DCGraphExecutor {
 		
 		//enabling source role if node belongs more than 10 edges 
 		
-		// РїСЂРѕР±Р»РµРјР° - РєР°Рє РёСЃРєР°С‚СЊ РєСЂР°С‚С‡Р°Р№С€РёРµ СЂР°СЃСЃС‚РѕСЏРЅРёСЏ РґРѕ РєР°Р¶РґРѕРіРѕ РёСЃС‚РѕС‡РЅРёРєР°? РІРµРґСЊ РµСЃС‚СЊ Р»РёРЅРєРё, РІ РєРѕС‚РѕСЂС‹Рµ РЅРµ РІС…РѕРґСЏС‚ РёСЃС‚РѕС‡РЅРёРєРё, РєСѓРґР° РёС… РѕС‚РЅРѕСЃРёС‚СЊ? 
+		// проблема - как искать кратчайшие расстояния до каждого источника? ведь есть линки, в которые не входят источники, куда их относить? 
 		
 		for(DCNode node : nodes){
 			System.out.println("puting role for node - " + node.getId());
+			List<DCNode> receiverCandidates = new ArrayList<DCNode>();
+			List<DCNode> receiverCandidates2 = new ArrayList<DCNode>();
+			
 			int counter = 0;
 			for(DCEdge edge : edges){
 				if(edge.getStartNode().equals(node)){
-					counter ++;
+					++counter;
+					receiverCandidates.add(edge.getEndNode());
 				}
 			}
 			System.out.println("counter - " + counter);
 			if(counter > 10){
-				System.out.println("true");
+				System.out.println("set source");
 				node.setSourceRole();
+				for(DCNode dcnode : receiverCandidates){
+					dcnode.setReceiverRole();
+				}
+				receiverCandidates.clear();
 			} else {
 				node.setReceiverRole();
+				System.out.println("set receiver");
+			}
+			
+			// test another variant
+//			int startCounter = 0;
+//			int endCounter = 0;
+//			for(DCEdge edge : edges){
+//				if(edge.getStartNode().equals(node)){
+//					++startCounter;
+//					receiverCandidates.add(edge.getEndNode());
+//				}
+//				if(edge.getEndNode().equals(node)){
+//					++endCounter;
+//					receiverCandidates2.add(edge.getStartNode());
+//				}
+//			}
+//			if(startCounter > 10){
+//				node.setSourceRole();
+//			} else if(startCounter == 1){
+//				node.setReceiverRole();
+//			}
+//			if(endCounter > 10){
+//				node.setSourceRole();
+//			} else if(endCounter == 1){
+//				node.setReceiverRole();
+//			}
+			
+		}
+		for(DCNode node : nodes){
+			if(node.getRole().equals("source")){
+				System.out.println("Source with id - " + node.getId());
 			}
 		}
 	}
