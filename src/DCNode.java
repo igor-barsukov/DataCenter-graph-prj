@@ -3,7 +3,7 @@ public class DCNode {
 	
 	private String nodeId;
 	private int mark;
-	private String role;
+	private String role = "";
 	
 	private static int INF = Integer.MAX_VALUE/2;
 	

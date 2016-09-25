@@ -20,6 +20,7 @@ public class DCGraphExecutor {
 	
 	private static String fileName1 = "WeightedFile2.txt";
 	private static String fileName2 = "oregon1_010331.txt";
+	private static String gmlFile = "gml_oregon1_010331.gml";
 	private static String fileNameOut = "oregon1_010331_Weight.txt";
 	
 	public static void main(String[] args) throws Exception{
@@ -30,6 +31,7 @@ public class DCGraphExecutor {
 		graphDataParser(rawData);
 		System.out.println("nodes size " + nodes.size());
 		System.out.println("edges size " + edges.size());
+		gmlParser();
 	}
 	
 	private static List<String> graphConfigParser(){
@@ -92,6 +94,63 @@ public class DCGraphExecutor {
 		return lines;
 	}
 	
+	private static void gmlParser() throws IOException{
+        BufferedWriter writer = null;
+		try {
+            
+            File file = new File("configs/" + gmlFile);
+            if (!file.exists()) {
+            	file.createNewFile();
+            }
+            writer = new BufferedWriter(new FileWriter(file.getAbsoluteFile()));
+            writer.write("graph");
+            writer.newLine();
+            writer.write("[");
+            writer.newLine();
+            
+	        for(DCNode node : nodes){
+	        	  writer.write("\tnode");
+	        	  writer.newLine();
+	              writer.write("\t[");
+	              writer.newLine();
+	        	  writer.write("\t\tid " + node.getId());
+	              writer.newLine();
+	              writer.write("\t\tlabel \"Node " + node.getId() + "\"");
+	              writer.newLine();
+	              writer.write("\t]");
+	              writer.newLine();
+	        }
+	        
+	        for(DCEdge edge : edges){
+	        	  writer.write("\tedge");
+	        	  writer.newLine();
+	              writer.write("\t[");
+	              writer.newLine();
+	              writer.write("\t\tsource " + edge.getStartNode().getId());
+	              writer.newLine();
+	              writer.write("\t\ttarget " + edge.getEndNode().getId());
+	              writer.newLine();
+	              writer.write("\t\tlabel \"Edge " + edge.getStartNode().getId() + " to " + edge.getEndNode().getId() + "\"");
+	              writer.newLine();
+	              writer.write("\t]");
+	              writer.newLine();
+	        }
+	        
+	        writer.write("]");
+            writer.newLine();
+            System.out.println("gml parser fihished");
+	        	        	       
+		} catch (IOException e) {
+			System.out.println("IO - " + e);
+		} catch (Exception e){
+			System.out.println("Common e - " + e);
+		}
+		finally{
+			writer.close();
+        }
+		
+	}
+	
 	/*put here role distributing logic*/
 	private static void graphDataParser(List <String> rawData) throws Exception{
 //		edgeId = 0;
@@ -125,34 +184,37 @@ public class DCGraphExecutor {
 		
 		//enabling source role if node belongs more than 10 edges 
 		
-		// проблема - как искать кратчайшие расстояния до каждого источника? ведь есть линки, в которые не входят источники, куда их относить? 
-		
+		// source - if node id occures more than 10 times at start or end position of edges
+		// receiver - if node id occures only 1 time at start or end position of all edges
+		// problem - what if there are edges with source and without receiver and vice versa? 
 		for(DCNode node : nodes){
 			System.out.println("puting role for node - " + node.getId());
 			List<DCNode> receiverCandidates = new ArrayList<DCNode>();
 			List<DCNode> receiverCandidates2 = new ArrayList<DCNode>();
 			
-			int counter = 0;
-			for(DCEdge edge : edges){
-				if(edge.getStartNode().equals(node)){
-					++counter;
-					receiverCandidates.add(edge.getEndNode());
-				}
-			}
-			System.out.println("counter - " + counter);
-			if(counter > 10){
-				System.out.println("set source");
-				node.setSourceRole();
-				for(DCNode dcnode : receiverCandidates){
-					dcnode.setReceiverRole();
-				}
-				receiverCandidates.clear();
-			} else {
-				node.setReceiverRole();
-				System.out.println("set receiver");
-			}
+//			int counter = 0;
+//			for(DCEdge edge : edges){
+//				if(edge.getStartNode().equals(node)){
+//					++counter;
+//					receiverCandidates.add(edge.getEndNode());
+//				}
+//			}
+//			System.out.println("counter - " + counter);
+//			if(counter > 10){
+//				System.out.println("set source");
+//				node.setSourceRole();
+//				for(DCNode dcnode : receiverCandidates){
+//					dcnode.setReceiverRole();
+//				}
+//				receiverCandidates.clear();
+//			} else {
+//				node.setReceiverRole();
+//				System.out.println("set receiver");
+//			}
 			
-			// test another variant
+			/*
+			 * test another variant
+			 * */
 //			int startCounter = 0;
 //			int endCounter = 0;
 //			for(DCEdge edge : edges){
@@ -165,22 +227,37 @@ public class DCGraphExecutor {
 //					receiverCandidates2.add(edge.getStartNode());
 //				}
 //			}
-//			if(startCounter > 10){
-//				node.setSourceRole();
-//			} else if(startCounter == 1){
-//				node.setReceiverRole();
+//			if(startCounter == 1 && endCounter == 1){
+//				System.out.println("*************************Conflict");
+//				continue;
 //			}
-//			if(endCounter > 10){
+//			if(startCounter > 10 || endCounter > 10){
 //				node.setSourceRole();
-//			} else if(endCounter == 1){
+//				continue;
+//			} else if(startCounter == 1 && endCounter == 0){
 //				node.setReceiverRole();
+//				System.out.println("*************************Receiver start");
+//				continue;
+//			} else if(startCounter == 0 && endCounter == 1){
+//				node.setReceiverRole();
+//				System.out.println("*************************Receiver end");
+//				continue;
 //			}
 			
 		}
-		for(DCNode node : nodes){
-			if(node.getRole().equals("source")){
-				System.out.println("Source with id - " + node.getId());
-			}
-		}
+		
+//		int i = 0;
+//		int j = 0;
+//		for(DCNode node : nodes){
+//			if(node.getRole().equals("source")){
+//				++i;
+//				System.out.println("Source with id - " + node.getId());
+//			}
+//			if(node.getRole().equals("receiver")){
+//				++j;
+//				System.out.println("Receiver with id - " + node.getId());
+//			}
+//		}
+//		System.out.println("source num - " + i + " , receiver num - " + j);
 	}
 }
