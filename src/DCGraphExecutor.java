@@ -31,7 +31,8 @@ public class DCGraphExecutor {
 		graphDataParser(rawData);
 		System.out.println("nodes size " + nodes.size());
 		System.out.println("edges size " + edges.size());
-		gmlParser();
+//		gmlParser();
+		roleDistributor();
 	}
 	
 	private static List<String> graphConfigParser(){
@@ -71,15 +72,15 @@ public class DCGraphExecutor {
                 while ((line = reader.readLine()) != null) {
                 	if(!line.startsWith("#")){
                     	generatedWeight = ThreadLocalRandom.current().nextInt(5, 25);
-                    	System.out.println("generatedWeight - " + generatedWeight.toString());
+//                    	System.out.println("generatedWeight - " + generatedWeight.toString());
                     	line = line.concat("        ").concat(generatedWeight.toString());
-                    	System.out.println("new line - " + line);
+//                    	System.out.println("new line - " + line);
                 	}
                     // write into file 
                     writer.write(line);
                     writer.newLine();
                     lines.add(line);
-                    System.out.println("line has written");
+//                    System.out.println("line has written");
                 }
 		} catch (IOException e) {
 			System.out.println("IO - " + e);
@@ -155,33 +156,34 @@ public class DCGraphExecutor {
 	private static void graphDataParser(List <String> rawData) throws Exception{
 //		edgeId = 0;
 		for (String line : rawData){
-//			System.out.println(line);
 			if(!line.startsWith("#")){
 				String [] arr = line.split("\\s+");
 				String sNodeId = arr[0]; 
-				System.out.println("snode - " + sNodeId);
+//				System.out.println("snode - " + sNodeId);
 				DCNode sNode = new DCNode(sNodeId);
 				if(!nodes.contains(sNode)){
 					nodes.add(sNode);
 				}
 				String eNodeId = arr[1];
-				System.out.println("enode - " + eNodeId);
+//				System.out.println("enode - " + eNodeId);
 				DCNode eNode = new DCNode(eNodeId);
 				if(!nodes.contains(eNode)){
 					nodes.add(eNode);
 				}
 				String weight = arr[2];
-				System.out.println("weight - " + weight);
+//				System.out.println("weight - " + weight);
 				
 				
 				DCEdge newEdge = new DCEdge(sNode, eNode, edgeId, weight);
-				System.out.println("edge id - " + newEdge.getId());
+//				System.out.println("edge id - " + newEdge.getId());
 				edges.add(newEdge);
 				edgeId = ++edgeId ;
 			}
-			System.out.println("delimeter");
-		}
-		
+//			System.out.println("delimeter");
+		}		
+	}
+	
+	private static void roleDistributor(){
 		//enabling source role if node belongs more than 10 edges 
 		
 		// source - if node id occures more than 10 times at start or end position of edges
@@ -215,34 +217,34 @@ public class DCGraphExecutor {
 			/*
 			 * test another variant
 			 * */
-//			int startCounter = 0;
-//			int endCounter = 0;
-//			for(DCEdge edge : edges){
-//				if(edge.getStartNode().equals(node)){
-//					++startCounter;
-//					receiverCandidates.add(edge.getEndNode());
-//				}
-//				if(edge.getEndNode().equals(node)){
-//					++endCounter;
-//					receiverCandidates2.add(edge.getStartNode());
-//				}
-//			}
-//			if(startCounter == 1 && endCounter == 1){
-//				System.out.println("*************************Conflict");
-//				continue;
-//			}
-//			if(startCounter > 10 || endCounter > 10){
-//				node.setSourceRole();
-//				continue;
-//			} else if(startCounter == 1 && endCounter == 0){
-//				node.setReceiverRole();
-//				System.out.println("*************************Receiver start");
-//				continue;
-//			} else if(startCounter == 0 && endCounter == 1){
-//				node.setReceiverRole();
-//				System.out.println("*************************Receiver end");
-//				continue;
-//			}
+			int startCounter = 0;
+			int endCounter = 0;
+			for(DCEdge edge : edges){
+				if(edge.getStartNode().equals(node)){
+					++startCounter;
+					receiverCandidates.add(edge.getEndNode());
+				}
+				if(edge.getEndNode().equals(node)){
+					++endCounter;
+					receiverCandidates2.add(edge.getStartNode());
+				}
+			}
+			if(startCounter == 1 && endCounter == 1){
+				System.out.println("*************************Conflict");
+				continue;
+			}
+			if(startCounter > 10 || endCounter > 10){
+				node.setSourceRole();
+				continue;
+			} else if(startCounter == 1 && endCounter == 0){
+				node.setReceiverRole();
+				System.out.println("*************************Receiver start");
+				continue;
+			} else if(startCounter == 0 && endCounter == 1){
+				node.setReceiverRole();
+				System.out.println("*************************Receiver end");
+				continue;
+			}
 			
 		}
 		
@@ -259,5 +261,17 @@ public class DCGraphExecutor {
 //			}
 //		}
 //		System.out.println("source num - " + i + " , receiver num - " + j);
+		
+		int edgeCounter = 0;
+		for(DCEdge edge : edges){
+			if((edge.getStartNode().getRole().equals("source") && edge.getEndNode().getRole().equals("receiver"))
+				|| (edge.getStartNode().getRole().equals("receiver") && edge.getEndNode().getRole().equals("source"))){
+				
+				++ edgeCounter;
+			}
+		}
+		System.out.println("edgeCounter - " + edgeCounter); // = 3
+		// надо переделывать логику распределения ролей , т.к. при текущей логике только 3 линка с источником и приемником
+		// 
 	}
 }
