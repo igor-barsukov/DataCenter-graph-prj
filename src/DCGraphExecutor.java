@@ -189,10 +189,11 @@ public class DCGraphExecutor {
 		// source - if node id occures more than 10 times at start or end position of edges
 		// receiver - if node id occures only 1 time at start or end position of all edges
 		// problem - what if there are edges with source and without receiver and vice versa? 
-		for(DCNode node : nodes){
+		List<DCNode> sourceCandidates = new ArrayList<DCNode>();
+                for(DCNode node : nodes){
 			System.out.println("puting role for node - " + node.getId());
-			List<DCNode> receiverCandidates = new ArrayList<DCNode>();
-			List<DCNode> receiverCandidates2 = new ArrayList<DCNode>();
+			
+
 			
 //			int counter = 0;
 //			for(DCEdge edge : edges){
@@ -222,11 +223,9 @@ public class DCGraphExecutor {
 			for(DCEdge edge : edges){
 				if(edge.getStartNode().equals(node)){
 					++startCounter;
-					receiverCandidates.add(edge.getEndNode());
 				}
 				if(edge.getEndNode().equals(node)){
 					++endCounter;
-					receiverCandidates2.add(edge.getStartNode());
 				}
 			}
 			if(startCounter == 1 && endCounter == 1){
@@ -235,6 +234,7 @@ public class DCGraphExecutor {
 			}
 			if(startCounter > 10 || endCounter > 10){
 				node.setSourceRole();
+                                sourceCandidates.add(node);
 				continue;
 			} else if(startCounter == 1 && endCounter == 0){
 				node.setReceiverRole();
@@ -263,15 +263,26 @@ public class DCGraphExecutor {
 //		System.out.println("source num - " + i + " , receiver num - " + j);
 		
 		int edgeCounter = 0;
+                List<DCEdge> clientServerEdges = new ArrayList<DCEdge>();  // edges with a_node - client , b_node - server and vice versa
 		for(DCEdge edge : edges){
 			if((edge.getStartNode().getRole().equals("source") && edge.getEndNode().getRole().equals("receiver"))
 				|| (edge.getStartNode().getRole().equals("receiver") && edge.getEndNode().getRole().equals("source"))){
 				
 				++ edgeCounter;
+                                clientServerEdges.add(edge);
 			}
 		}
 		System.out.println("edgeCounter - " + edgeCounter); // = 3
-		// надо переделывать логику распределения ролей , т.к. при текущей логике только 3 линка с источником и приемником
+		// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ , пїЅ.пїЅ. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		// 
+                for(DCNode node : sourceCandidates){
+                    int integralMetric = 0;   // need to store this val in DCNode source object
+                    for(DCEdge edge : clientServerEdges){
+                    if(edge.getStartNode().equals(node) || edge.getEndNode().equals(node)){
+                            integralMetric += Integer.parseInt(edge.getWeight());
+                        }
+                    }    
+                }
+
 	}
 }
