@@ -7,7 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class DCGraphExecutor {
@@ -15,6 +18,10 @@ public class DCGraphExecutor {
 	private static List<DCNode> nodes = new ArrayList<DCNode>(); 
 	private static List<DCEdge> edges = new ArrayList<DCEdge>();
 	private static List<String> rawData = new ArrayList<String>();
+	
+	private static List<DCNode> clients = new ArrayList<DCNode>();
+	private static List<DCNode> servers = new ArrayList<DCNode>();
+	private static List<DCEdge> clientServerEdges = new ArrayList<DCEdge>();  // edges with a_node - client , b_node - server and vice versa
 	
 	private static int edgeId;
 	
@@ -32,7 +39,10 @@ public class DCGraphExecutor {
 		System.out.println("nodes size " + nodes.size());
 		System.out.println("edges size " + edges.size());
 //		gmlParser();
-		roleDistributor();
+//		roleDistributor();
+//		searchClients();
+		setRoles();
+		calculateIntegralMetric();
 	}
 	
 	private static List<String> graphConfigParser(){
@@ -183,6 +193,7 @@ public class DCGraphExecutor {
 		}		
 	}
 	
+	// obsolete
 	private static void roleDistributor(){
 		//enabling source role if node belongs more than 10 edges 
 		
@@ -234,7 +245,7 @@ public class DCGraphExecutor {
 			}
 			if(startCounter > 10 || endCounter > 10){
 				node.setSourceRole();
-                                sourceCandidates.add(node);
+                sourceCandidates.add(node);
 				continue;
 			} else if(startCounter == 1 && endCounter == 0){
 				node.setReceiverRole();
@@ -263,18 +274,18 @@ public class DCGraphExecutor {
 //		System.out.println("source num - " + i + " , receiver num - " + j);
 		
 		int edgeCounter = 0;
-                List<DCEdge> clientServerEdges = new ArrayList<DCEdge>();  // edges with a_node - client , b_node - server and vice versa
+        List<DCEdge> clientServerEdges = new ArrayList<DCEdge>();  // edges with a_node - client , b_node - server and vice versa
 		for(DCEdge edge : edges){
 			if((edge.getStartNode().getRole().equals("source") && edge.getEndNode().getRole().equals("receiver"))
 				|| (edge.getStartNode().getRole().equals("receiver") && edge.getEndNode().getRole().equals("source"))){
 				
 				++ edgeCounter;
-                                clientServerEdges.add(edge);
+                clientServerEdges.add(edge);
 			}
 		}
 		System.out.println("edgeCounter - " + edgeCounter); // = 3
-		// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ , пїЅ.пїЅ. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
-		// 
+		// надо переделывать логику распределения ролей , т.к. при текущей логике только 3 линка с источником и приемником
+		
                 for(DCNode node : sourceCandidates){
                     int integralMetric = 0;   // need to store this val in DCNode source object
                     for(DCEdge edge : clientServerEdges){
@@ -284,5 +295,86 @@ public class DCGraphExecutor {
                     }    
                 }
 
+	}
+	
+	// for test purpose
+	private static void searchClients(){
+		List<DCNode> singleClients = new ArrayList<DCNode>();
+		
+		for(DCNode node : nodes){
+			int i1 = 0;
+			for(DCEdge edge : edges){
+				if(edge.getStartNode().equals(node) || edge.getEndNode().equals(node)){
+					++ i1; 
+				}
+			}
+			if(i1 < 2)  {
+				singleClients.add(node);
+				System.out.println("single node - " + node.getId());
+			}
+ 		}
+		
+		System.out.println("singleClients size = " + singleClients.size()); //3720
+		
+	}
+	
+	private static void setRoles(){
+//		List<DCNode> clients = new ArrayList<DCNode>();   // global
+//		Set<DCNode> servers = new HashSet<DCNode>();      // what's wrong with Set?!
+//		List<DCNode> servers = new ArrayList<DCNode>();   // global
+		
+		for(DCNode node : nodes){
+			int i1 = 0;
+			for(DCEdge edge : edges){
+				if(edge.getStartNode().equals(node) || edge.getEndNode().equals(node)){
+					++ i1; 
+				}
+			}
+			if(i1 < 2)  {
+				node.setReceiverRole();
+				clients.add(node);
+				System.out.println("client node - " + node.getId());
+			}
+ 		}
+		for(DCNode node : clients){
+			for(DCEdge edge : edges){
+				if(edge.getStartNode().equals(node) && !clients.contains(edge.getEndNode())){
+					clientServerEdges.add(edge);
+					if(!servers.contains(edge.getEndNode())){
+						edge.getEndNode().setSourceRole();
+						servers.add(edge.getEndNode());
+						System.out.println("server node - " + edge.getEndNode().getId());
+					}
+					
+				} else if(edge.getEndNode().equals(node) && !clients.contains(edge.getStartNode())){
+					clientServerEdges.add(edge);
+					if(!servers.contains(edge.getStartNode())){
+						edge.getStartNode().setSourceRole();
+						servers.add(edge.getStartNode());
+						System.out.println("server node - " + edge.getStartNode().getId());
+					}
+					
+				}
+				
+			}
+		}
+		
+		System.out.println("singleClients size = " + clients.size());
+		System.out.println("servers size = " + servers.size());
+		
+	}
+	
+	private static void calculateIntegralMetric(){
+        for(DCNode node : servers){
+            int integralMetric = 0;   // need to store this val in DCNode source object
+            int countTimes = 0;
+            for(DCEdge edge : clientServerEdges){
+	            if(edge.getStartNode().equals(node) || edge.getEndNode().equals(node)){
+	                    integralMetric += Integer.parseInt(edge.getWeight());
+	                    ++ countTimes;
+	            }
+            }
+            System.out.println("for server " + node.getId() + " integral metric = " + integralMetric + " at " + countTimes + " counts");
+        }
 	}
 }
