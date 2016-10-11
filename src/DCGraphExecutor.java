@@ -26,9 +26,11 @@ public class DCGraphExecutor {
 	private static int edgeId;
 	
 	private static String fileName1 = "WeightedFile2.txt";
-	private static String fileName2 = "oregon1_010331.txt";
+//	private static String fileName2 = "oregon1_010331.txt";
+	private static String fileName2 = "igba_custom_topo.txt";
 	private static String gmlFile = "gml_oregon1_010331.gml";
-	private static String fileNameOut = "oregon1_010331_Weight.txt";
+//	private static String fileNameOut = "oregon1_010331_Weight.txt";
+	private static String fileNameOut = "igba_custom_topo_Weight.txt";
 	
 	public static void main(String[] args) throws Exception{
 		PrintStream out = new PrintStream(new FileOutputStream("logs/output.txt"));
