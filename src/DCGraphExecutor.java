@@ -7,9 +7,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,6 +26,8 @@ public class DCGraphExecutor {
 	private static List<DCNode> clients = new ArrayList<DCNode>();
 	private static List<DCNode> servers = new ArrayList<DCNode>();
 	private static List<DCEdge> clientServerEdges = new ArrayList<DCEdge>();  // edges with a_node - client , b_node - server and vice versa
+	
+	private static Map<DCNode, List<DCNode>> sourceReceiverMap = new HashMap<>();
 	
 	private static int edgeId;
 	
@@ -43,8 +49,8 @@ public class DCGraphExecutor {
 //		gmlParser();
 //		roleDistributor();
 //		searchClients();
-		setRoles();
-		calculateIntegralMetric();
+		setRoles1();
+//		calculateIntegralMetric();
 	}
 	
 	private static List<String> graphConfigParser(){
@@ -319,6 +325,111 @@ public class DCGraphExecutor {
 		System.out.println("singleClients size = " + singleClients.size()); //3720
 		
 	}
+	
+	
+	private static void setRoles1(){
+		List<DCNode> internalServers = new ArrayList<>();
+		List<DCNode> internalSources = new ArrayList<>();
+		List<DCNode> internalReceivers = new ArrayList<>();
+		
+		// make global
+//		Map<DCNode, List<DCNode>> sourceReceiverMap = new HashMap<>();
+
+		for(DCNode node : nodes){
+			int i1 = 0;
+			for(DCEdge edge : edges){
+				if(edge.getStartNode().equals(node) || edge.getEndNode().equals(node)){
+					++ i1; 
+				}
+			}
+			if(i1 < 2)  {
+				internalServers.add(node);
+				System.out.println("server node - " + node.getId());
+			}
+ 		}
+		Collections.shuffle(internalServers);
+		
+		int numOfSources = (int) Math.ceil(internalServers.size() * 0.2);
+		int numOfReceivers = internalServers.size() - numOfSources;
+		System.out.println("numOfSources " + numOfSources);
+		System.out.println("numOfReceivers " + numOfReceivers);
+		System.out.println("numOfReceivers/numOfSources " + (numOfReceivers/numOfSources));
+		for(int i = 0; i <= numOfSources; i ++){
+			DCNode source = internalServers.get(i);
+			source.setSourceRole();
+			internalSources.add(source);
+			internalServers.remove(i);
+		}
+		System.out.println("sources list size " + internalSources.size());
+		for(DCNode source : internalSources){
+			System.out.println("current source " + source.getId());
+			List<DCNode> receiversListForSource = new ArrayList<>();
+			int numOfReceiversForList = 0;
+			// can't remove elements from for-each cycle so use iterator
+			for(Iterator<DCNode> iter = internalServers.iterator(); iter.hasNext(); ){
+				if(numOfReceiversForList < numOfReceivers/numOfSources && !internalServers.isEmpty()){
+					// should call the next() method only once on each iteration
+					DCNode currentReceiver = iter.next();
+					System.out.println("current receiver " + currentReceiver.getId());
+					currentReceiver.setReceiverRole();
+					receiversListForSource.add(currentReceiver);
+					iter.remove();
+					numOfReceiversForList = ++ numOfReceiversForList;
+					System.out.println("num of receiver " + numOfReceiversForList);
+				} else {
+					break;
+				}
+					
+			}
+			System.out.println("done");
+			sourceReceiverMap.put(source, receiversListForSource);
+			
+		}
+		System.out.println("mapa " + sourceReceiverMap);	
+	}
+	
+	private static void optimizeClients(){
+		DCNode localServerGateway = null;
+		for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
+			DCNode server = entry.getKey();
+			//searching gateway
+			for(DCEdge edge : edges){
+				if(edge.getStartNode().equals(server)){
+					localServerGateway = edge.getEndNode();
+					break;
+				} else if(edge.getEndNode().equals(server)){
+					localServerGateway = edge.getStartNode();
+					break;
+				}
+			}
+			//searching over clients
+			DCNode localClientGateway = null;
+			for(DCNode client : entry.getValue()){
+				DCEdge clientEdge = null;
+				for(DCEdge edge : edges){
+					if(edge.getStartNode().equals(client)){
+						localClientGateway = edge.getEndNode();
+						clientEdge = edge;
+						break;
+					} else if(edge.getEndNode().equals(client)){
+						localClientGateway = edge.getStartNode();
+						clientEdge = edge;
+						break;
+					}
+				}
+				// TODO - enable checking of local gateway ports - limit 20
+				if(!localClientGateway.equals(localServerGateway)){
+					// createNewEdgeAndTransmitNode
+					DCEdge newClientEdge = new DCEdge(client, localServerGateway, clientEdge.getId(), clientEdge.getWeight());
+					edges.remove(clientEdge);
+					edges.add(newClientEdge);
+				}
+			}
+			
+		}
+		
+	}
+	
 	
 	private static void setRoles(){
 //		List<DCNode> clients = new ArrayList<DCNode>();   // global
