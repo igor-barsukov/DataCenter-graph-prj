@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ public class DCGraphExecutor {
 //		roleDistributor();
 //		searchClients();
 		setRoles1();
+                optimizeClients();
 //		calculateIntegralMetric();
 	}
 	
@@ -292,7 +294,7 @@ public class DCGraphExecutor {
 			}
 		}
 		System.out.println("edgeCounter - " + edgeCounter); // = 3
-		// надо переделывать логику распределения ролей , т.к. при текущей логике только 3 линка с источником и приемником
+		// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ , пїЅ.пїЅ. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		
                 for(DCNode node : sourceCandidates){
                     int integralMetric = 0;   // need to store this val in DCNode source object
@@ -328,7 +330,7 @@ public class DCGraphExecutor {
 	
 	
 	private static void setRoles1(){
-		List<DCNode> internalServers = new ArrayList<>();
+		List<DCNode> internalServers = new ArrayList<>(); // list for both sources and receivers
 		List<DCNode> internalSources = new ArrayList<>();
 		List<DCNode> internalReceivers = new ArrayList<>();
 		
@@ -347,10 +349,12 @@ public class DCGraphExecutor {
 				System.out.println("server node - " + node.getId());
 			}
  		}
+                // make random order in list
 		Collections.shuffle(internalServers);
-		
+		// 20% of nodes a sources
 		int numOfSources = (int) Math.ceil(internalServers.size() * 0.2);
-		int numOfReceivers = internalServers.size() - numOfSources;
+		// 80% of nodes are receivers
+                int numOfReceivers = internalServers.size() - numOfSources;
 		System.out.println("numOfSources " + numOfSources);
 		System.out.println("numOfReceivers " + numOfReceivers);
 		System.out.println("numOfReceivers/numOfSources " + (numOfReceivers/numOfSources));
@@ -393,40 +397,27 @@ public class DCGraphExecutor {
 		for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
 			DCNode server = entry.getKey();
 			//searching gateway
-			for(DCEdge edge : edges){
-				if(edge.getStartNode().equals(server)){
-					localServerGateway = edge.getEndNode();
-					break;
-				} else if(edge.getEndNode().equals(server)){
-					localServerGateway = edge.getStartNode();
-					break;
-				}
-			}
+                        localServerGateway = server.fetchGateway(edges).getKey();
+                        
 			//searching over clients
-			DCNode localClientGateway = null;
 			for(DCNode client : entry.getValue()){
-				DCEdge clientEdge = null;
-				for(DCEdge edge : edges){
-					if(edge.getStartNode().equals(client)){
-						localClientGateway = edge.getEndNode();
-						clientEdge = edge;
-						break;
-					} else if(edge.getEndNode().equals(client)){
-						localClientGateway = edge.getStartNode();
-						clientEdge = edge;
-						break;
-					}
-				}
+                                Map.Entry<DCNode, DCEdge> gatewayWithLink = client.fetchGateway(edges);
+                                DCNode localClientGateway = gatewayWithLink.getKey();
+                                DCEdge clientEdge = gatewayWithLink.getValue();
 				// TODO - enable checking of local gateway ports - limit 20
 				if(!localClientGateway.equals(localServerGateway)){
 					// createNewEdgeAndTransmitNode
 					DCEdge newClientEdge = new DCEdge(client, localServerGateway, clientEdge.getId(), clientEdge.getWeight());
 					edges.remove(clientEdge);
 					edges.add(newClientEdge);
+                                        System.out.println("Client " + client.toString() + " has been transfered to edge " + newClientEdge.toString());
 				}
 			}
-			
 		}
+                System.out.println("Edges after optimization:");
+                for(DCEdge edge : edges){
+                    System.out.println("edge " + edge.toString());
+                }
 		
 	}
 	

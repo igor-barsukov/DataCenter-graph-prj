@@ -27,4 +27,9 @@ public class DCEdge {
 	public DCNode getEndNode(){
 		return this.endNode;
 	}
+        
+       	@Override
+	 public String toString(){
+		 return "Edge with id = " + this.edgeId + " , start node id = " + this.startNode.getId() + " , end node id = " + this.endNode.getId() + " and weight = " + this.weight;
+	 }
 }
