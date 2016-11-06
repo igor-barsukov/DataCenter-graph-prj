@@ -33,7 +33,7 @@ public class DCGraphExecutor {
 	private static int edgeId;
 	
 	private static String fileName1 = "WeightedFile2.txt";
-//	private static String fileName2 = "oregon1_010331.txt";
+	private static String fileName222 = "oregon1_010331.txt";
 	private static String fileName2 = "igba_custom_topo.txt";
 	private static String gmlFile = "gml_oregon1_010331.gml";
 //	private static String fileNameOut = "oregon1_010331_Weight.txt";
@@ -47,12 +47,15 @@ public class DCGraphExecutor {
 		graphDataParser(rawData);
 		System.out.println("nodes size " + nodes.size());
 		System.out.println("edges size " + edges.size());
-//		gmlParser();
-//		roleDistributor();
-//		searchClients();
-		setRoles1();
-                optimizeClients();
-//		calculateIntegralMetric();
+////		gmlParser();
+////		roleDistributor();
+////		searchClients();
+//		setRoles1();
+//        optimizeClients();
+////		calculateIntegralMetric();
+		
+		GMLGenerator generator = new GMLGenerator(nodes, edges, fileName222);
+		generator.execute();
 	}
 	
 	private static List<String> graphConfigParser(){

@@ -35,11 +35,13 @@ public class DCNode {
 	}
 	
 	public void setSourceRole(){
-		this.role = "source";
+//		this.role = "source";
+		this.role = NodeRoles.SOURCE.toString();
 	}
 	
 	public void setReceiverRole(){
-		this.role = "receiver";
+//		this.role = "receiver";
+		this.role = NodeRoles.RECEIVER.toString();
 	}
 	
 	public String getRole(){
