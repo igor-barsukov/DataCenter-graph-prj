@@ -358,6 +358,7 @@ public class DCGraphExecutor {
 		System.out.println("numOfSources " + numOfSources);
 		System.out.println("numOfReceivers " + numOfReceivers);
 		System.out.println("numOfReceivers/numOfSources " + (numOfReceivers/numOfSources));
+                // set sources (randomly)
 		for(int i = 0; i <= numOfSources; i ++){
 			DCNode source = internalServers.get(i);
 			source.setSourceRole();
@@ -365,6 +366,7 @@ public class DCGraphExecutor {
 			internalServers.remove(i);
 		}
 		System.out.println("sources list size " + internalSources.size());
+                // set receivers for each source (randomly)
 		for(DCNode source : internalSources){
 			System.out.println("current source " + source.getId());
 			List<DCNode> receiversListForSource = new ArrayList<>();
@@ -391,6 +393,18 @@ public class DCGraphExecutor {
 		}
 		System.out.println("mapa " + sourceReceiverMap);	
 	}
+        
+        private void setNeighbors(){
+            for(DCNode node : nodes){
+                for(DCEdge edge : edges){
+                    if(edge.getStartNode().equals(node)){
+                        node.setNeighbor(edge.getEndNode());
+                    } else if(edge.getEndNode().equals(node)){
+                        node.setNeighbor(edge.getStartNode());
+                    }
+                }
+            }
+        }
 	
 	private static void optimizeClients(){
 		DCNode localServerGateway = null;
@@ -399,7 +413,7 @@ public class DCGraphExecutor {
 			//searching gateway
                         localServerGateway = server.fetchGateway(edges).getKey();
                         
-			//searching over clients
+			//searching over clients - if client gateway not equal source's gateway - relocate client's edge
 			for(DCNode client : entry.getValue()){
                                 Map.Entry<DCNode, DCEdge> gatewayWithLink = client.fetchGateway(edges);
                                 DCNode localClientGateway = gatewayWithLink.getKey();
@@ -421,7 +435,22 @@ public class DCGraphExecutor {
 		
 	}
 	
-	
+        private void findShortestPathes(DCNode fromNode, DCNode toNode, DCNode intermediateNode, int mark){
+            setNeighbors();
+            fromNode.setMark(0);
+//            DCNode initialNode = fromNode;
+            
+            if(intermediateNode.getNeighbors().contains(toNode)){
+            
+            } else {
+                for(DCNode neighbor : fromNode.getNeighbors()){
+                    mark = mark + DCNode.getWeightForNodes(intermediateNode, toNode, edges);
+                    intermediateNode = neighbor;
+                    findShortestPathes(fromNode, toNode, intermediateNode, mark);
+                }
+            }         
+        }
+	       
 	private static void setRoles(){
 //		List<DCNode> clients = new ArrayList<DCNode>();   // global
 //		Set<DCNode> servers = new HashSet<DCNode>();      // what's wrong with Set?!

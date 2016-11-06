@@ -27,6 +27,14 @@ public class DCEdge {
 	public DCNode getEndNode(){
 		return this.endNode;
 	}
+       
+        public boolean containsNodes(DCNode node1, DCNode node2){
+            if((this.getStartNode().equals(node1) && this.getEndNode().equals(node2)) ||
+               (this.getEndNode().equals(node1) && this.getStartNode().equals(node2))){
+                return true;
+            }
+            return false;
+        }
         
        	@Override
 	 public String toString(){
