@@ -11,7 +11,7 @@ public class DCNode {
 	private String nodeId;
 	private int mark;
 	private String role = "";
-        private List<DCNode> neighbors = new ArrayList<>();
+    private List<DCNode> neighbors = new ArrayList<>();
 	
 	private static int INF = Integer.MAX_VALUE/2;
 	
@@ -50,42 +50,42 @@ public class DCNode {
 		return role;
 	}
         
-        public void setNeighbor(DCNode neighbor){
-            this.neighbors.add(neighbor);
-        }
-        
-        public List<DCNode> getNeighbors(){
-            return this.neighbors;
-        }
-               
-        // fetching gateway and link for sources or receivers - assuming that there is only one link, on one side of it placed source(receiver) and on another - gateway
-        public Map.Entry<DCNode, DCEdge> fetchGateway(List<DCEdge> listOfEdges){
-            DCNode gateway = null;
-            DCEdge link = null;
-            for(DCEdge edge : listOfEdges){
-                if(edge.getStartNode().equals(this)){
-                        gateway = edge.getEndNode();
-                        link = edge;
-                        break;
-                } else if(edge.getEndNode().equals(this)){
-                        gateway = edge.getStartNode();
-                        link = edge;
-                        break;
-                }
+    public void setNeighbor(DCNode neighbor){
+        this.neighbors.add(neighbor);
+    }
+    
+    public List<DCNode> getNeighbors(){
+        return this.neighbors;
+    }
+           
+    // fetching gateway and link for sources or receivers - assuming that there is only one link, on one side of it placed source(receiver) and on another - gateway
+    public Map.Entry<DCNode, DCEdge> fetchGateway(List<DCEdge> listOfEdges){
+        DCNode gateway = null;
+        DCEdge link = null;
+        for(DCEdge edge : listOfEdges){
+            if(edge.getStartNode().equals(this)){
+                    gateway = edge.getEndNode();
+                    link = edge;
+                    break;
+            } else if(edge.getEndNode().equals(this)){
+                    gateway = edge.getStartNode();
+                    link = edge;
+                    break;
             }
-            Map.Entry<DCNode, DCEdge> resultEntry = new AbstractMap.SimpleEntry<>(gateway, link);
-            return resultEntry;
         }
-        
-       // searches link where "from" and "to" node places and returnes link weight
-       public static int getWeightForNodes(DCNode from, DCNode to, List<DCEdge> listOfEdges){
-            for(DCEdge edge : listOfEdges){
-                if(edge.containsNodes(from, to)){
-                    return Integer.parseInt(edge.getWeight());
-                }
+        Map.Entry<DCNode, DCEdge> resultEntry = new AbstractMap.SimpleEntry<>(gateway, link);
+        return resultEntry;
+    }
+    
+   // searches link where "from" and "to" node places and returnes link weight
+   public static int getWeightForNodes(DCNode from, DCNode to, List<DCEdge> listOfEdges){
+        for(DCEdge edge : listOfEdges){
+            if(edge.containsNodes(from, to)){
+                return Integer.parseInt(edge.getWeight());
             }
-            return 0;
         }
+        return 0;
+    }
 	
 //	@Override
 //    public boolean equals(Object object)
