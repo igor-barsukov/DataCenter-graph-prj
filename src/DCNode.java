@@ -81,7 +81,9 @@ public class DCNode {
    public static int getWeightForNodes(DCNode from, DCNode to, List<DCEdge> listOfEdges){
         for(DCEdge edge : listOfEdges){
             if(edge.containsNodes(from, to)){
-                return Integer.parseInt(edge.getWeight());
+            	int weight = Integer.parseInt(edge.getWeight());
+                System.out.println("weight = " + weight);
+            	return weight;
             }
         }
         return 0;
@@ -118,6 +120,6 @@ public class DCNode {
 	 
 	 @Override
 	 public String toString(){
-		 return "Node with id - " + this.nodeId + " and mark - " + this.mark;
+		 return "Node with id - " + this.nodeId /*+ " and mark - " + this.mark*/;
 	 }
 }
