@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -258,6 +260,74 @@ public class DCGraphExecutor {
     	
     }
     
+    // check visited nodes at every iteration
+    private static void recursiveCall1(DCNode fromNode, DCNode toNode, DCNode previousNode, int mark, List<String> visitedNodeIds){
+    	System.out.println("recCall calling with params - fromNode=" + fromNode.getId() + " , toNode=" + toNode.getId()
+    			+ " , previousNode=" + (previousNode == null ? "null" : previousNode.getId()) + " , mark=" + mark);
+    	try{
+    		DCNode testNode = nodes.get(nodes.indexOf(fromNode));
+        	if(testNode.getNeighbors().contains(toNode)){
+            	mark = mark + DCNode.getWeightForNodes(fromNode, toNode, edges);
+            	toNode.setMark(mark);
+            	System.out.println("recCall final for node " + toNode.toString() + "  , mark = " + mark);
+            } else {
+            	System.out.println("recCall visitedNodes {" + visitedNodeIds + "}");
+            	if(/*previousNode != null && */ !visitedNodeIds.contains(fromNode.getId()) ){
+            		System.out.println("recCall inside else");
+            		System.out.println("recCall fromNode.getNeighbors() " + fromNode.getNeighbors());
+            		System.out.println("recCall testNode.getNeighbors() " + testNode.getNeighbors());
+            		for(DCNode neighbor : testNode.getNeighbors()){
+            			if(neighbor != previousNode){
+            				System.out.println("recCall neighbor " + neighbor.toString());
+                            mark = mark + DCNode.getWeightForNodes(fromNode, neighbor, edges);
+                            System.out.println("recCall mark = " + mark);
+                            visitedNodeIds.add(fromNode.getId());
+                            previousNode = fromNode;
+                            fromNode = neighbor;
+//                            System.out.println("recursion executes with parameters - fromNode=" + fromNode + " , toNode=" + toNode + " ,previousNode=" + previousNode + " ,mark=" + mark);
+                            recursiveCall1(fromNode, toNode, previousNode, mark, visitedNodeIds);
+//                            Thread.sleep(1000);
+            			} else {
+            				System.out.println("recCall wrong path");
+            				return;
+            			}
+            			
+                    }
+            	} else{
+            		System.out.println("recCall visited path -> return");
+    				return;
+            	}
+            }
+        }catch(Exception e){
+        	System.out.println("error  - " + e);
+        }
+    }
+    
+    private static void recursiveCall2(DCNode fromNode, DCNode toNode, List<String> visitedNodeIds){
+    	for(DCNode node : fromNode.getNeighbors()){
+    		if(node.getId().equals(toNode.getId())){
+    			System.out.println("path was found");
+    		}else{
+    			visitedNodeIds.add(node.getId());
+    		}
+    	}
+    	
+    }
+    
+    private static void bfsCall(DCNode fromNode, DCNode toNode){
+    	List<String> visitedNodeIds = new ArrayList<>();
+    	Queue<DCNode> queue = new PriorityQueue<>();
+    	visitedNodeIds.add(fromNode.getId());
+    	queue.add(fromNode);
+    	
+    	while(!queue.isEmpty()){
+    		DCNode node1 = queue.remove();
+    		
+    		
+    	}
+    	
+    }
+    
     private static void recursiveCall(DCNode fromNode, DCNode toNode, DCNode previousNode, int mark){
     	System.out.println("recursiveCall calling with params - fromNode=" + fromNode.getId() + " , toNode=" + toNode.getId()
     			+ " , previousNode=" + (previousNode == null ? "null" : previousNode.getId()) + " , mark=" + mark);
@@ -297,46 +367,6 @@ public class DCGraphExecutor {
         }
     }
     
-    // check visited nodes at every iteration
-    private static void recursiveCall1(DCNode fromNode, DCNode toNode, DCNode previousNode, int mark, List<String> visitedNodeIds){
-    	System.out.println("recursiveCall calling with params - fromNode=" + fromNode.getId() + " , toNode=" + toNode.getId()
-    			+ " , previousNode=" + (previousNode == null ? "null" : previousNode.getId()) + " , mark=" + mark);
-    	try{
-    		DCNode testNode = nodes.get(nodes.indexOf(fromNode));
-        	if(testNode.getNeighbors().contains(toNode)){
-            	mark = mark + DCNode.getWeightForNodes(fromNode, toNode, edges);
-            	toNode.setMark(mark);
-            	System.out.println("For node " + toNode.toString() + "  , mark = " + mark);
-            } else {
-            	if(/*previousNode != null && */true && !visitedNodeIds.contains(fromNode.getId())){
-            		System.out.println("recursiveCall inside else");
-            		System.out.println("fromNode.getNeighbors() " + fromNode.getNeighbors());
-//            		DCNode testNode = nodes.get(nodes.indexOf(fromNode));
-            		System.out.println("testNode.getNeighbors() " + testNode.getNeighbors());
-            		for(DCNode neighbor : testNode.getNeighbors()){
-//            			System.out.println("current neighbor " + neighbor.getId());
-            			if(neighbor != previousNode){
-            				System.out.println("neighbor " + neighbor.toString());
-                            mark = mark + DCNode.getWeightForNodes(fromNode, neighbor, edges);
-                            System.out.println("mark = " + mark);
-                            visitedNodeIds.add(fromNode.getId());
-                            previousNode = fromNode;
-                            fromNode = neighbor;
-//                            System.out.println("recursion executes with parameters - fromNode=" + fromNode + " , toNode=" + toNode + " ,previousNode=" + previousNode + " ,mark=" + mark);
-                            recursiveCall(fromNode, toNode, previousNode, mark);
-//                            Thread.sleep(1000);
-            			} else {
-            				System.out.println("wrong path");
-            				return;
-            			}
-            			
-                    }
-            	}
-            }
-        }catch(Exception e){
-        	System.out.println("error  - " + e);
-        }
-    }
         
 	// obsolete
 	private static void roleDistributor(){
