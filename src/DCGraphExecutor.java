@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -252,7 +253,8 @@ public class DCGraphExecutor {
 //        			recursiveCall(initFromNode, receiver, null, 0);
         			
         			List<String> ids = new ArrayList<>();
-        			recursiveCall1(initFromNode, receiver, null, 0, ids);
+//        			recursiveCall1(initFromNode, receiver, null, 0, ids);
+        			bfsCall(initFromNode, receiver);
         		}
 //        		break;
     		}
@@ -260,6 +262,7 @@ public class DCGraphExecutor {
     	
     }
     
+    //contains error
     // check visited nodes at every iteration
     private static void recursiveCall1(DCNode fromNode, DCNode toNode, DCNode previousNode, int mark, List<String> visitedNodeIds){
     	System.out.println("recCall calling with params - fromNode=" + fromNode.getId() + " , toNode=" + toNode.getId()
@@ -303,31 +306,58 @@ public class DCGraphExecutor {
         }
     }
     
-    private static void recursiveCall2(DCNode fromNode, DCNode toNode, List<String> visitedNodeIds){
-    	for(DCNode node : fromNode.getNeighbors()){
-    		if(node.getId().equals(toNode.getId())){
-    			System.out.println("path was found");
-    		}else{
-    			visitedNodeIds.add(node.getId());
-    		}
-    	}
-    	
-    }
+//    private static void recursiveCall2(DCNode fromNode, DCNode toNode, List<String> visitedNodeIds){
+//    	for(DCNode node : fromNode.getNeighbors()){
+//    		if(node.getId().equals(toNode.getId())){
+//    			System.out.println("path was found");
+//    		}else{
+//    			visitedNodeIds.add(node.getId());
+//    		}
+//    	}
+//    	
+//    }
     
     private static void bfsCall(DCNode fromNode, DCNode toNode){
     	List<String> visitedNodeIds = new ArrayList<>();
-    	Queue<DCNode> queue = new PriorityQueue<>();
+    	Queue<DCNode> queue = new LinkedList<>();
+    	System.out.println("BFS start from " + fromNode.getId() + " to " + toNode.getId());
     	visitedNodeIds.add(fromNode.getId());
     	queue.add(fromNode);
+    	fromNode.setMark(0);
     	
     	while(!queue.isEmpty()){
-    		DCNode node1 = queue.remove();
-    		
+    		DCNode node1 = queue.poll();
+    		System.out.println("BFS removing from queue node1 " + node1.getId());
+    		if(node1.equals(toNode)) {
+    			System.out.println("Destination node " + toNode.getId() + " reached with weight = " + node1.getMark());
+    		}
+    		System.out.println("BFS visited nodes " + visitedNodeIds);
+    		DCNode node11 = nodes.get(nodes.indexOf(node1));
+    		System.out.println("BFS node1 neigboors " + node1.getNeighbors());
+    		System.out.println("BFS node11 neigboors " + node11.getNeighbors());
+    		if(node11.getMark() > 100000){
+    			node11.setMark(0);
+    		}
+    		for(DCNode node2 : node11.getNeighbors()){
+    			if(!visitedNodeIds.contains(node2.getId())){
+    				visitedNodeIds.add(node2.getId());
+    				System.out.println("BFS add to queue node2 " + node2.getId());
+    				System.out.println("BFS weight for prev node =" + node11.getMark());
+    				System.out.println("BFS weignt between edges = " + DCNode.getWeightForNodes(node2, node11, edges));
+    				int mark = node11.getMark() + DCNode.getWeightForNodes(node2, node11, edges);
+    				System.out.println("BFS weignt for current node = " + mark);
+    				node2.setMark(mark);
+    				queue.add(node2);
+    			}
+    		}
     		
     	}
     	
+    	
+    	
     }
     
+    //deprecated
     private static void recursiveCall(DCNode fromNode, DCNode toNode, DCNode previousNode, int mark){
     	System.out.println("recursiveCall calling with params - fromNode=" + fromNode.getId() + " , toNode=" + toNode.getId()
     			+ " , previousNode=" + (previousNode == null ? "null" : previousNode.getId()) + " , mark=" + mark);
