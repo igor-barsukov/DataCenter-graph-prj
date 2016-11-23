@@ -333,8 +333,9 @@ public class DCGraphExecutor {
     		}
     		System.out.println("BFS visited nodes " + visitedNodeIds);
     		DCNode node11 = nodes.get(nodes.indexOf(node1));
-    		System.out.println("BFS node1 neigboors " + node1.getNeighbors());
-    		System.out.println("BFS node11 neigboors " + node11.getNeighbors());
+    		node11.setMark(node1.getMark());
+    		System.out.println("BFS node1 weight = " + node1.getMark() + " , neigboors " + node1.getNeighbors());
+    		System.out.println("BFS node11 weight = " + node11.getMark() + " , neigboors " + node11.getNeighbors());
     		if(node11.getMark() > 100000){
     			node11.setMark(0);
     		}
@@ -352,9 +353,7 @@ public class DCGraphExecutor {
     		}
     		
     	}
-    	
-    	
-    	
+    		
     }
     
     //deprecated
