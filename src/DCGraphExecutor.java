@@ -242,23 +242,33 @@ public class DCGraphExecutor {
 		
 	}
     
-    private static void findShortestPathesForReceivers(/*Map<DCNode, List<DCNode>> sourcesReceiversMap*/){
+    private static void findShortestPathesForReceivers(){
 //    	setNeighbors();
-    	/*for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){*/ Map.Entry<DCNode, List<DCNode>> entry = sourceReceiverMap.entrySet().iterator().next();
+    	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){ 
     		DCNode initFromNode = entry.getKey();
     		initFromNode.setMark(0);
     		System.out.println("findShortestPathesForReceivers for source " + initFromNode.toString());
     		if(!entry.getValue().isEmpty()){
-    			for(DCNode receiver : entry.getValue()){
-//        			recursiveCall(initFromNode, receiver, null, 0);
-        			
-        			List<String> ids = new ArrayList<>();
+    			for(DCNode receiver : entry.getValue()){       			
+//        			List<String> ids = new ArrayList<>();
 //        			recursiveCall1(initFromNode, receiver, null, 0, ids);
         			bfsCall(initFromNode, receiver);
         		}
-//        		break;
     		}
-//    	}
+    	}
+    	
+    	System.out.println("Check calculated marks ...");
+    	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
+    		if(!entry.getValue().isEmpty()){
+    			for(DCNode receiver : entry.getValue()){
+    				System.out.println("Mark for node " + receiver.getId() + "  = " + receiver.getMark());
+	    		}
+    		}
+    	}
+    	
+    	System.out.println("Transfer receivers ...");
+    	int averageMark = 40;
+    	
     	
     }
     
@@ -305,18 +315,7 @@ public class DCGraphExecutor {
         	System.out.println("error  - " + e);
         }
     }
-    
-//    private static void recursiveCall2(DCNode fromNode, DCNode toNode, List<String> visitedNodeIds){
-//    	for(DCNode node : fromNode.getNeighbors()){
-//    		if(node.getId().equals(toNode.getId())){
-//    			System.out.println("path was found");
-//    		}else{
-//    			visitedNodeIds.add(node.getId());
-//    		}
-//    	}
-//    	
-//    }
-    
+      
     private static void bfsCall(DCNode fromNode, DCNode toNode){
     	List<String> visitedNodeIds = new ArrayList<>();
     	Queue<DCNode> queue = new LinkedList<>();
@@ -332,6 +331,7 @@ public class DCGraphExecutor {
     			System.out.println("Destination node " + toNode.getId() + " reached with weight = " + node1.getMark());
     		}
     		System.out.println("BFS visited nodes " + visitedNodeIds);
+    		// problem - node1 has problem with searching neighbors
     		DCNode node11 = nodes.get(nodes.indexOf(node1));
     		node11.setMark(node1.getMark());
     		System.out.println("BFS node1 weight = " + node1.getMark() + " , neigboors " + node1.getNeighbors());
@@ -343,8 +343,7 @@ public class DCGraphExecutor {
     			if(!visitedNodeIds.contains(node2.getId())){
     				visitedNodeIds.add(node2.getId());
     				System.out.println("BFS add to queue node2 " + node2.getId());
-    				System.out.println("BFS weight for prev node =" + node11.getMark());
-    				System.out.println("BFS weignt between edges = " + DCNode.getWeightForNodes(node2, node11, edges));
+    				System.out.println("BFS weight for prev node11 =" + node11.getMark() + " , weignt between nodes = " + DCNode.getWeightForNodes(node2, node11, edges));
     				int mark = node11.getMark() + DCNode.getWeightForNodes(node2, node11, edges);
     				System.out.println("BFS weignt for current node = " + mark);
     				node2.setMark(mark);
@@ -354,46 +353,6 @@ public class DCGraphExecutor {
     		
     	}
     		
-    }
-    
-    //deprecated
-    private static void recursiveCall(DCNode fromNode, DCNode toNode, DCNode previousNode, int mark){
-    	System.out.println("recursiveCall calling with params - fromNode=" + fromNode.getId() + " , toNode=" + toNode.getId()
-    			+ " , previousNode=" + (previousNode == null ? "null" : previousNode.getId()) + " , mark=" + mark);
-    	try{
-    		DCNode testNode = nodes.get(nodes.indexOf(fromNode));
-        	if(testNode.getNeighbors().contains(toNode)){
-            	mark = mark + DCNode.getWeightForNodes(fromNode, toNode, edges);
-            	toNode.setMark(mark);
-            	System.out.println("For node " + toNode.toString() + "  , mark = " + mark);
-            } else {
-            	if(/*previousNode != null && */true){
-            		System.out.println("recursiveCall inside else");
-            		System.out.println("fromNode.getNeighbors() " + fromNode.getNeighbors());
-//            		DCNode testNode = nodes.get(nodes.indexOf(fromNode));
-            		System.out.println("testNode.getNeighbors() " + testNode.getNeighbors());
-            		for(DCNode neighbor : testNode.getNeighbors()){
-//            			System.out.println("current neighbor " + neighbor.getId());
-            			if(neighbor != previousNode){
-            				System.out.println("neighbor " + neighbor.toString());
-                            mark = mark + DCNode.getWeightForNodes(fromNode, neighbor, edges);
-                            System.out.println("mark = " + mark);
-                            previousNode = fromNode;
-                            fromNode = neighbor;
-//                            System.out.println("recursion executes with parameters - fromNode=" + fromNode + " , toNode=" + toNode + " ,previousNode=" + previousNode + " ,mark=" + mark);
-                            recursiveCall(fromNode, toNode, previousNode, mark);
-//                            Thread.sleep(1000);
-            			} else {
-            				System.out.println("wrong path");
-            				return;
-            			}
-            			
-                    }
-            	}
-            }
-        }catch(Exception e){
-        	System.out.println("error  - " + e);
-        }
     }
     
         

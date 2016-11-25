@@ -12,12 +12,23 @@ public class DCNode {
 	private int mark;
 	private String role = "";
     private List<DCNode> neighbors = new ArrayList<>();
+    
+    private int availablePorts;
+    
+    public int getAvailablePorts(){
+    	return this.availablePorts;
+    }
+    
+    public void holdPort(){
+    	this.availablePorts = this.availablePorts - 1;
+    }
 	
 	private static int INF = Integer.MAX_VALUE/2;
 	
 	public DCNode(String id){
 		this.nodeId = id;
 		this.mark = INF;
+		this.availablePorts = 10;
 	}
 	
 	public void setId(String id){
