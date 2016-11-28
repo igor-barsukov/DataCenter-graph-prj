@@ -31,6 +31,10 @@ public class DCNode {
 		this.availablePorts = 10;
 	}
 	
+	public DCNode(){
+		
+	}
+	
 	public void setId(String id){
 		this.nodeId = id;
 	}
@@ -113,24 +117,24 @@ public class DCNode {
 //        return sameId;
 //    }
 	
-	 @Override
-	    public boolean equals(Object object) {
+	@Override
+    public boolean equals(Object object) {
 
-	        if (object != null && object instanceof DCNode) {
-	        	DCNode thing = (DCNode) object;
-	            if (nodeId == null) {
-	                return (thing.nodeId == null);
-	            }
-	            else {
-	                return nodeId.equals(thing.nodeId);
-	            }
-	        }
+        if (object != null && object instanceof DCNode) {
+        	DCNode thing = (DCNode) object;
+            if (nodeId == null) {
+                return (thing.nodeId == null);
+            }
+            else {
+                return nodeId.equals(thing.nodeId);
+            }
+        }
 
-	        return false;
-	    }
+        return false;
+    }
 	 
 	 @Override
 	 public String toString(){
-		 return "Node with id - " + this.nodeId /*+ " and mark - " + this.mark*/;
+		 return "Node with id - " + this.nodeId + " and mark - " + this.mark;
 	 }
 }

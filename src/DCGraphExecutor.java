@@ -243,33 +243,162 @@ public class DCGraphExecutor {
 	}
     
     private static void findShortestPathesForReceivers(){
-//    	setNeighbors();
+    	Map<DCNode, List<DCNode>> newSourceReceiverMap = new HashMap<>();
     	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){ 
     		DCNode initFromNode = entry.getKey();
     		initFromNode.setMark(0);
+    		List<DCNode> markedReceivers = new ArrayList<>();
     		System.out.println("findShortestPathesForReceivers for source " + initFromNode.toString());
     		if(!entry.getValue().isEmpty()){
     			for(DCNode receiver : entry.getValue()){       			
 //        			List<String> ids = new ArrayList<>();
 //        			recursiveCall1(initFromNode, receiver, null, 0, ids);
-        			bfsCall(initFromNode, receiver);
+    				
+    				DCNode markedReceiver = bfsCall(initFromNode, receiver);
+    				System.out.println("marked Receiver = " + markedReceiver.getId() + " , mark " + markedReceiver.getMark());
+    				markedReceivers.add(markedReceiver);
         		}
+    			System.out.println("source after bfs" + initFromNode.toString());
+    			sourceReceiverMap.put(initFromNode, markedReceivers);
+    			System.out.println("sourceReceiverMap inside for " + sourceReceiverMap);
+    			
+    			System.out.println("put into newSourceReceiverMap: " + "initFromNode - " + initFromNode + " ,markedReceivers - " + markedReceivers);
+    			
     		}
+    		newSourceReceiverMap.put(initFromNode, markedReceivers);
     	}
     	
     	System.out.println("Check calculated marks ...");
-    	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
-    		if(!entry.getValue().isEmpty()){
-    			for(DCNode receiver : entry.getValue()){
-    				System.out.println("Mark for node " + receiver.getId() + "  = " + receiver.getMark());
-	    		}
-    		}
-    	}
+    	System.out.println("newSourceReceiverMap " + newSourceReceiverMap);
+//    	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
+//    		if(!entry.getValue().isEmpty()){
+//    			for(DCNode receiver : entry.getValue()){
+//    				System.out.println("Mark for node " + receiver.getId() + "  = " + receiver.getMark());
+//	    		}
+//    		}
+//    	}
     	
     	System.out.println("Transfer receivers ...");
     	int averageMark = 40;
+    	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
+    		if(!entry.getValue().isEmpty()){
+    			DCNode source = entry.getKey();
+    			DCNode gateway = source.fetchGateway(edges).getKey();
+    			System.out.println("For source = " + source.getId() + " , with gateway = " + gateway.getId());
+    			for(DCNode receiver : entry.getValue()){
+    				if(receiver.getMark() > averageMark){
+    					System.out.println("Receiver " + receiver.getId() + " has high mark = " + receiver.getMark());
+    					if(gateway.getAvailablePorts() > 0){
+    						// updating DCEdges
+    						DCEdge currentEdge = receiver.fetchGateway(edges).getValue();
+    						int edgeWithGatewayIndex = edges.indexOf(currentEdge);
+    						DCEdge newEdge = new DCEdge(receiver, gateway, currentEdge.getId(), currentEdge.getWeight());
+    						edges.set(edgeWithGatewayIndex, newEdge);
+    						
+//    						System.out.print("It was transfered");
+    					}
+    					
+    				}
+	    		}
+    		}
+    	}
+        System.out.println("Edges after optimization:");
+        for(DCEdge edge : edges){
+            System.out.println("edge " + edge.toString());
+        }
     	
+    }
+    
+    private static void bfsCall1(Map<DCNode, List<DCNode>> map){
+    	for(Map.Entry<DCNode, List<DCNode>> entry : map.entrySet()){ 
+    		DCNode initFromNode = entry.getKey();
+    		System.out.println("findShortestPathesForReceivers for source " + initFromNode.toString());
+    		if(!entry.getValue().isEmpty()){
+    			for(DCNode receiver : entry.getValue()){       			
+    				
+    				List<String> visitedNodeIds = new ArrayList<>();
+    		    	Queue<DCNode> queue = new LinkedList<>();
+    		    	System.out.println("BFS start from " + initFromNode.getId() + " to " + receiver.getId());
+    		    	visitedNodeIds.add(initFromNode.getId());
+    		    	queue.add(initFromNode);
+    		    	initFromNode.setMark(0);
+    		    	
+    		    	while(!queue.isEmpty()){
+    		    		DCNode node1 = queue.poll();
+    		    		System.out.println("BFS removing from queue node1 " + node1.getId());
+    		    		if(node1.equals(receiver)) {
+    		    			System.out.println("Destination node " + receiver.getId() + " reached with weight = " + node1.getMark());
+    		    		}
+    		    		System.out.println("BFS visited nodes " + visitedNodeIds);
+    		    		// problem - node1 has problem with searching neighbors
+    		    		DCNode node11 = nodes.get(nodes.indexOf(node1));
+    		    		node11.setMark(node1.getMark());
+    		    		System.out.println("BFS node1 weight = " + node1.getMark() + " , neigboors " + node1.getNeighbors());
+    		    		System.out.println("BFS node11 weight = " + node11.getMark() + " , neigboors " + node11.getNeighbors());
+    		    		if(node11.getMark() > 100000){
+    		    			node11.setMark(0);
+    		    		}
+    		    		for(DCNode node2 : node11.getNeighbors()){
+    		    			if(!visitedNodeIds.contains(node2.getId())){
+    		    				visitedNodeIds.add(node2.getId());
+    		    				System.out.println("BFS add to queue node2 " + node2.getId());
+    		    				System.out.println("BFS weight for prev node11 =" + node11.getMark() + " , weignt between nodes = " + DCNode.getWeightForNodes(node2, node11, edges));
+    		    				int mark = node11.getMark() + DCNode.getWeightForNodes(node2, node11, edges);
+    		    				System.out.println("BFS weignt for current node = " + mark);
+    		    				node2.setMark(mark);
+    		    				queue.add(node2);
+    		    			}
+    		    		}
+    		    		
+    		    	}
+    				
+    				
+    				
+        		}
+    		}
+    	}
+    }
+    
+    private static DCNode bfsCall(DCNode fromNode, DCNode toNode){
+    	DCNode updatedReceiver = new DCNode();
+    	List<String> visitedNodeIds = new ArrayList<>();
+    	Queue<DCNode> queue = new LinkedList<>();
+    	System.out.println("BFS start from " + fromNode.getId() + " to " + toNode.getId());
+    	visitedNodeIds.add(fromNode.getId());
+    	queue.add(fromNode);
+    	fromNode.setMark(0);
     	
+    	while(!queue.isEmpty()){
+    		DCNode node1 = queue.poll();
+    		System.out.println("BFS removing from queue node1 " + node1.getId());
+    		if(node1.equals(toNode)) {
+    			System.out.println("Destination node " + toNode.getId() + " reached with weight = " + node1.getMark());
+    			updatedReceiver = node1;
+    			return updatedReceiver;	
+    		}
+    		System.out.println("BFS visited nodes " + visitedNodeIds);
+    		// problem - node1 has problem with searching neighbors
+    		DCNode node11 = nodes.get(nodes.indexOf(node1));
+    		node11.setMark(node1.getMark());
+    		System.out.println("BFS node1 weight = " + node1.getMark() + " , neigboors " + node1.getNeighbors());
+    		System.out.println("BFS node11 weight = " + node11.getMark() + " , neigboors " + node11.getNeighbors());
+    		if(node11.getMark() > 100000){
+    			node11.setMark(0);
+    		}
+    		for(DCNode node2 : node11.getNeighbors()){
+    			if(!visitedNodeIds.contains(node2.getId())){
+    				visitedNodeIds.add(node2.getId());
+    				System.out.println("BFS add to queue node2 " + node2.getId());
+    				System.out.println("BFS weight for prev node11 =" + node11.getMark() + " , weignt between nodes = " + DCNode.getWeightForNodes(node2, node11, edges));
+    				int mark = node11.getMark() + DCNode.getWeightForNodes(node2, node11, edges);
+    				System.out.println("BFS weignt for current node = " + mark);
+    				node2.setMark(mark);
+    				queue.add(node2);
+    			}
+    		}
+    		
+    	}
+    	return updatedReceiver;	
     }
     
     //contains error
@@ -314,45 +443,6 @@ public class DCGraphExecutor {
         }catch(Exception e){
         	System.out.println("error  - " + e);
         }
-    }
-      
-    private static void bfsCall(DCNode fromNode, DCNode toNode){
-    	List<String> visitedNodeIds = new ArrayList<>();
-    	Queue<DCNode> queue = new LinkedList<>();
-    	System.out.println("BFS start from " + fromNode.getId() + " to " + toNode.getId());
-    	visitedNodeIds.add(fromNode.getId());
-    	queue.add(fromNode);
-    	fromNode.setMark(0);
-    	
-    	while(!queue.isEmpty()){
-    		DCNode node1 = queue.poll();
-    		System.out.println("BFS removing from queue node1 " + node1.getId());
-    		if(node1.equals(toNode)) {
-    			System.out.println("Destination node " + toNode.getId() + " reached with weight = " + node1.getMark());
-    		}
-    		System.out.println("BFS visited nodes " + visitedNodeIds);
-    		// problem - node1 has problem with searching neighbors
-    		DCNode node11 = nodes.get(nodes.indexOf(node1));
-    		node11.setMark(node1.getMark());
-    		System.out.println("BFS node1 weight = " + node1.getMark() + " , neigboors " + node1.getNeighbors());
-    		System.out.println("BFS node11 weight = " + node11.getMark() + " , neigboors " + node11.getNeighbors());
-    		if(node11.getMark() > 100000){
-    			node11.setMark(0);
-    		}
-    		for(DCNode node2 : node11.getNeighbors()){
-    			if(!visitedNodeIds.contains(node2.getId())){
-    				visitedNodeIds.add(node2.getId());
-    				System.out.println("BFS add to queue node2 " + node2.getId());
-    				System.out.println("BFS weight for prev node11 =" + node11.getMark() + " , weignt between nodes = " + DCNode.getWeightForNodes(node2, node11, edges));
-    				int mark = node11.getMark() + DCNode.getWeightForNodes(node2, node11, edges);
-    				System.out.println("BFS weignt for current node = " + mark);
-    				node2.setMark(mark);
-    				queue.add(node2);
-    			}
-    		}
-    		
-    	}
-    		
     }
     
         
