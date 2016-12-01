@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class DCGraphExecutor {
@@ -244,6 +245,8 @@ public class DCGraphExecutor {
     
     private static void findShortestPathesForReceivers(){
     	Map<DCNode, List<DCNode>> newSourceReceiverMap = new HashMap<>();
+    	Map<DCNode, List<DCNode>> unmodifMap = new HashMap<>();
+    	newSourceReceiverMap = Collections.unmodifiableMap(unmodifMap);
     	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){ 
     		DCNode initFromNode = entry.getKey();
     		initFromNode.setMark(0);
