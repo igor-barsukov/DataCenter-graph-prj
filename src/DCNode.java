@@ -6,14 +6,26 @@ import java.util.List;
 import java.util.Map;
 
 
-public class DCNode {
+public class DCNode implements Cloneable{
+	
+	private static int INF = Integer.MAX_VALUE/2;
+	private static int MAX_PORTS_NUMBER = 10;
 	
 	private String nodeId;
 	private int mark;
 	private String role = "";
-    private List<DCNode> neighbors = new ArrayList<>();
+	private int availablePorts;
+	private List<DCNode> neighbors = new ArrayList<>();
     
-    private int availablePorts;
+	public DCNode(String id){
+		this.nodeId = id;
+		this.mark = INF;
+		this.availablePorts = MAX_PORTS_NUMBER;
+	}
+	
+	public DCNode(){
+		
+	}
     
     public int getAvailablePorts(){
     	return this.availablePorts;
@@ -22,18 +34,6 @@ public class DCNode {
     public void holdPort(){
     	this.availablePorts = this.availablePorts - 1;
     }
-	
-	private static int INF = Integer.MAX_VALUE/2;
-	
-	public DCNode(String id){
-		this.nodeId = id;
-		this.mark = INF;
-		this.availablePorts = 10;
-	}
-	
-	public DCNode(){
-		
-	}
 	
 	public void setId(String id){
 		this.nodeId = id;
@@ -52,12 +52,10 @@ public class DCNode {
 	}
 	
 	public void setSourceRole(){
-//		this.role = "source";
 		this.role = NodeRoles.SOURCE.toString();
 	}
 	
 	public void setReceiverRole(){
-//		this.role = "receiver";
 		this.role = NodeRoles.RECEIVER.toString();
 	}
 	
@@ -132,6 +130,11 @@ public class DCNode {
 
         return false;
     }
+	
+	 @Override
+	 public DCNode clone() throws CloneNotSupportedException{
+		return (DCNode)super.clone();
+	 }
 	 
 	 @Override
 	 public String toString(){
