@@ -12,14 +12,14 @@ public class DCNode implements Cloneable{
 	private static int MAX_PORTS_NUMBER = 10;
 	
 	private String nodeId;
-	private int mark;
+	private int cost;
 	private String role = "";
 	private int availablePorts;
 	private List<DCNode> neighbors = new ArrayList<>();
     
 	public DCNode(String id){
 		this.nodeId = id;
-		this.mark = INF;
+		this.cost = INF;
 		this.availablePorts = MAX_PORTS_NUMBER;
 	}
 	
@@ -43,12 +43,12 @@ public class DCNode implements Cloneable{
 		return nodeId;	
 	}
 	
-	public void setMark(int mark){
-		this.mark = mark;
+	public void setCost(int mark){
+		this.cost = mark;
 	}
 	
-	public int getMark(){
-		return mark;	
+	public int getCost(){
+		return cost;	
 	}
 	
 	public void setSourceRole(){
@@ -138,6 +138,6 @@ public class DCNode implements Cloneable{
 	 
 	 @Override
 	 public String toString(){
-		 return "Node with id - " + this.nodeId + " and mark - " + this.mark;
+		 return "Node with id - " + this.nodeId + " and cost - " + this.cost;
 	 }
 }

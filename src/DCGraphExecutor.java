@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DCGraphExecutor {
 	
 	private static double SOURCES_FACTOR = 0.2; // represents portion of sources in topology, corresponding factor of receivers = 1 - SOURCES_FACTOR
-	private static int NODES_AVERAGE_MARK = 40;
+	private static int NODES_AVERAGE_COST = 40;
 	
 	private static List<DCNode> nodes = new ArrayList<DCNode>(); 
 	private static List<DCEdge> edges = new ArrayList<DCEdge>();
@@ -49,7 +49,7 @@ public class DCGraphExecutor {
 		PrintStream out = new PrintStream(new FileOutputStream("logs/output.txt"));
 		System.setOut(out);
 		
-		rawData = graphConfigParserWithWeigtAdding();
+		rawData = graphConfigParserWithWeigtAdding(fileName2, fileNameOut);
 		graphDataParser(rawData);
 		System.out.println("nodes size " + nodes.size());
 		System.out.println("edges size " + edges.size());
@@ -60,19 +60,19 @@ public class DCGraphExecutor {
 		findShortestPathesForReceivers();
 //        optimizeClients();
 		
-//		GMLGenerator generator = new GMLGenerator(nodes, edges, fileName222);
+//		GMLGenerator generator = new GMLGenerator(nodes, edges, fileName2);
 //		generator.execute();
 	}
 	
 	
-	private static List<String> graphConfigParserWithWeigtAdding() throws IOException{
+	private static List<String> graphConfigParserWithWeigtAdding(String fileNameIn, String fileNameOut) throws IOException{
 		BufferedReader reader = null;
         BufferedWriter writer = null;
 		Integer generatedWeight;
 		List<String> lines = new ArrayList<String>();
 		System.out.println("graphConfigParserWithWeigtAdding starting");
 		try {
-            reader = new BufferedReader(new FileReader("configs/" + fileName2));
+            reader = new BufferedReader(new FileReader("configs/" + fileNameIn));
             File file = new File("configs/" + fileNameOut);
             if (!file.exists()) {
             	file.createNewFile();
@@ -237,7 +237,7 @@ public class DCGraphExecutor {
     	Map<DCNode, List<DCNode>> newSourceReceiverMap = new HashMap<>();
     	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){ 
     		DCNode sourceNode = entry.getKey();
-    		sourceNode.setMark(0);
+    		sourceNode.setCost(0);
     		List<DCNode> markedReceivers = new ArrayList<>();
     		System.out.println("findShortestPathesForReceivers for source " + sourceNode.toString());
     		if(!entry.getValue().isEmpty()){
@@ -246,7 +246,7 @@ public class DCGraphExecutor {
 //        			recursiveCall1(initFromNode, receiver, null, 0, ids);
     				
     				DCNode markedReceiver = bfsCall(sourceNode, receiver);
-    				System.out.println("findShortestPathesForReceivers marked Receiver = " + markedReceiver.getId() + " , mark " + markedReceiver.getMark());
+    				System.out.println("findShortestPathesForReceivers marked Receiver = " + markedReceiver.getId() + " , mark " + markedReceiver.getCost());
     				markedReceivers.add(markedReceiver);
         		}
     			sourceReceiverMap.put(sourceNode, markedReceivers);    			
@@ -265,15 +265,17 @@ public class DCGraphExecutor {
 //    		}
 //    	}
     	
-    	System.out.println("Relocate receivers ...");
+    	System.out.println("Relocate receivers 1st stage...");
+    	List<DCNode> unmovedReceivers = new ArrayList<>();
+    	int averageCost = countAverageCost();
     	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
     		if(!entry.getValue().isEmpty()){
     			DCNode source = entry.getKey();
     			DCNode gateway = source.fetchGateway(edges).getKey();
     			System.out.println("Relocate receivers for source = " + source.getId() + " , with gateway = " + gateway.getId());
     			for(DCNode receiver : entry.getValue()){
-    				if(receiver.getMark() > NODES_AVERAGE_MARK){
-    					System.out.println("Relocate receivers  - receiver " + receiver.getId() + " has overvalued mark = " + receiver.getMark());
+    				if(receiver.getCost() > averageCost){
+    					System.out.println("Relocate receivers  - receiver " + receiver.getId() + " has overvalued mark = " + receiver.getCost());
     					if(gateway.getAvailablePorts() > 0){
     						// updating DCEdges
     						DCEdge currentEdge = receiver.fetchGateway(edges).getValue();
@@ -284,18 +286,45 @@ public class DCGraphExecutor {
     						System.out.println("Relocate receivers - receiver " + receiver.getId() + " was transfered");
     					} else{
     						System.out.println("Relocate receivers - gateway " + gateway.getId() + " doesn't have available ports");
+    						unmovedReceivers.add(receiver);
     					}
     					
     				}
 	    		}
     		}
     	}
+    	
+    	System.out.println("Relocate receivers 2st stage...");
+    	for(DCNode node : unmovedReceivers){
+//    		List <DCNode> gateways = getAvailableGateways();
+    		
+    	}
+    	
         System.out.println("Topology after optimization:");
         for(DCEdge edge : edges){
         	System.out.println("From - " + edge.getStartNode().getId() + "  to - " + edge.getEndNode().getId() + "  weight - " + edge.getWeight());
         }
     	
     }   
+    
+    private static int countAverageCost(){
+    	int costSum = 0;
+    	int receiversNumber = 0;
+    	int averageCost = 0;
+    	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
+    		if(!entry.getValue().isEmpty()){
+    			for(DCNode receiver : entry.getValue()){
+    				costSum += receiver.getCost();
+    				receiversNumber ++;
+    			}
+    		}
+    	}
+    	System.out.println("costSum = " + costSum);
+    	System.out.println("receiversNumber = " + receiversNumber);
+    	averageCost = costSum/receiversNumber;
+    	System.out.println("averageCost = " + averageCost);
+    	return averageCost;
+    }
     
     private static DCNode bfsCall(DCNode fromNode, DCNode toNode) throws CloneNotSupportedException{
     	DCNode updatedReceiverClone = new DCNode();
@@ -304,17 +333,17 @@ public class DCGraphExecutor {
     	System.out.println("bfsCall start from " + fromNode.getId() + " to " + toNode.getId());
     	visitedNodeIds.add(fromNode.getId());
     	queue.add(fromNode);
-    	fromNode.setMark(0);
+    	fromNode.setCost(0);
     	
     	while(!queue.isEmpty()){
     		DCNode node1 = queue.poll();
     		System.out.println("bfsCall removing from queue node " + node1.getId());
     		if(node1.equals(toNode)) {
-    			System.out.println("bfsCall - destination node " + toNode.getId() + " reached with weight = " + node1.getMark());
+    			System.out.println("bfsCall - destination node " + toNode.getId() + " reached with weight = " + node1.getCost());
     			
     			updatedReceiverClone = node1.clone();
     			updatedReceiverClone.setId(node1.getId());
-    			updatedReceiverClone.setMark(node1.getMark());
+    			updatedReceiverClone.setCost(node1.getCost());
     			updatedReceiverClone.setReceiverRole();
     			
     			return updatedReceiverClone;	
@@ -322,20 +351,20 @@ public class DCGraphExecutor {
     		System.out.println("bfsCall visited nodes " + visitedNodeIds);
     		// problem - node1 has problem with searching neighbors
     		DCNode node11 = nodes.get(nodes.indexOf(node1));
-    		node11.setMark(node1.getMark());
-    		System.out.println("bfsCall node1 " + node1.getId() + " has weight = " + node1.getMark() + " , and neigboors = " + node1.getNeighbors());
-    		System.out.println("bfsCall node11 " + node11.getId() + " has weight = " + node11.getMark() + " , and neigboors = " + node11.getNeighbors());
-    		if(node11.getMark() > 100000){
-    			node11.setMark(0);
+    		node11.setCost(node1.getCost());
+    		System.out.println("bfsCall node1 " + node1.getId() + " has weight = " + node1.getCost() + " , and neigboors = " + node1.getNeighbors());
+    		System.out.println("bfsCall node11 " + node11.getId() + " has weight = " + node11.getCost() + " , and neigboors = " + node11.getNeighbors());
+    		if(node11.getCost() > 100000){
+    			node11.setCost(0);
     		}
     		for(DCNode node2 : node11.getNeighbors()){
     			if(!visitedNodeIds.contains(node2.getId())){
     				visitedNodeIds.add(node2.getId());
     				System.out.println("bfsCall - add to queue node " + node2.getId());
-    				System.out.println("bfsCall - for prev node " + node11.getId() + " weight =" + node11.getMark() + " , weignt between nodes = " + DCNode.getWeightForNodes(node2, node11, edges));
-    				int mark = node11.getMark() + DCNode.getWeightForNodes(node2, node11, edges);
+    				System.out.println("bfsCall - for prev node " + node11.getId() + " weight =" + node11.getCost() + " , weignt between nodes = " + DCNode.getWeightForNodes(node2, node11, edges));
+    				int mark = node11.getCost() + DCNode.getWeightForNodes(node2, node11, edges);
     				System.out.println("bfsCall - for current node " + node2.getId() + " weignt = " + mark);
-    				node2.setMark(mark);
+    				node2.setCost(mark);
     				queue.add(node2);
     			}
     		}
@@ -353,7 +382,7 @@ public class DCGraphExecutor {
     		DCNode testNode = nodes.get(nodes.indexOf(fromNode));
         	if(testNode.getNeighbors().contains(toNode)){
             	mark = mark + DCNode.getWeightForNodes(fromNode, toNode, edges);
-            	toNode.setMark(mark);
+            	toNode.setCost(mark);
             	System.out.println("recCall final for node " + toNode.toString() + "  , mark = " + mark);
             } else {
             	System.out.println("recCall visitedNodes {" + visitedNodeIds + "}");
@@ -480,7 +509,6 @@ public class DCGraphExecutor {
 			}
 		}
 		System.out.println("edgeCounter - " + edgeCounter); // = 3
-		// ���� ������������ ������ ������������� ����� , �.�. ��� ������� ������ ������ 3 ����� � ���������� � ����������
 		
                 for(DCNode node : sourceCandidates){
                     int integralMetric = 0;   // need to store this val in DCNode source object
