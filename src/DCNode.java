@@ -34,6 +34,10 @@ public class DCNode implements Cloneable{
     public void holdPort(){
     	this.availablePorts = this.availablePorts - 1;
     }
+    
+    public void releasePort(){
+        this.availablePorts = this.availablePorts + 1;
+    }
 	
 	public void setId(String id){
 		this.nodeId = id;
