@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -181,15 +183,15 @@ public class DCGraphExecutor {
 			System.out.println("setRoles current source " + source.getId());
 			List<DCNode> receiversListForSource = new ArrayList<>();
                         
-                        DCNode sourceGateway1 = fetchGatewayForNode(source).getKey();
-//                        DCNode sourceGateway = source.fetchGateway(edges).getKey();
-//                        DCNode sourceGateway1 = nodes.get(nodes.indexOf(sourceGateway));
-                        System.out.println("sourceGateway " + sourceGateway1.getId() + " ports before " + sourceGateway1.getAvailablePorts());
-                        sourceGateway1.holdPort();
-                        System.out.println("sourceGateway ports after " + sourceGateway1.getAvailablePorts());
+	        DCNode sourceGateway1 = fetchGatewayForNode(source).getKey();
+//          DCNode sourceGateway = source.fetchGateway(edges).getKey();
+//          DCNode sourceGateway1 = nodes.get(nodes.indexOf(sourceGateway));
+	        System.out.println("sourceGateway " + sourceGateway1.getId() + " ports before " + sourceGateway1.getAvailablePorts());
+	        sourceGateway1.holdPort();
+	        System.out.println("sourceGateway ports after " + sourceGateway1.getAvailablePorts());
                         
                         
-                        int numOfReceiversForList = 0;
+            int numOfReceiversForList = 0;
 			// can't remove elements from for-each cycle so use iterator
 			for(Iterator<DCNode> iter = internalServers.iterator(); iter.hasNext(); ){
 				if(numOfReceiversForList < numOfReceivers/numOfSources && !internalServers.isEmpty()){
@@ -198,10 +200,10 @@ public class DCGraphExecutor {
 //					System.out.println("setRoles current receiver " + currentReceiver.getId());
 					currentReceiver.setReceiverRole();
 					receiversListForSource.add(currentReceiver);
-                                        
-                                        // hold gateway port for receiver
-//                                        currentReceiver.fetchGateway(edges).getKey().holdPort();
-                                        fetchGatewayForNode(currentReceiver).getKey().holdPort();
+                    
+                    // hold gateway port for receiver
+//                  currentReceiver.fetchGateway(edges).getKey().holdPort();
+                    fetchGatewayForNode(currentReceiver).getKey().holdPort();
 
 					iter.remove();
 					numOfReceiversForList = ++ numOfReceiversForList;
@@ -216,21 +218,21 @@ public class DCGraphExecutor {
 			
 		}
 		System.out.println("setRoles done");
-		System.out.print("setRoles sourceReceiverMap: ");
+		System.out.println("setRoles sourceReceiverMap: ");
     	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
     	    DCNode currentSource = entry.getKey();
-//            DCNode currentGateway = currentSource.fetchGateway(edges).getKey();
+//          DCNode currentGateway = currentSource.fetchGateway(edges).getKey();
             DCNode currentGateway = fetchGatewayForNode(currentSource).getKey();
-            System.out.println("Gateway " + currentGateway.getId() + " has available ports = " + currentGateway.getAvailablePorts());
-            System.out.print("Source " + currentSource.getId() + " has receivers [");
+            System.out.print("Gateway " + currentGateway.getId() + " has available ports = " + currentGateway.getAvailablePorts());
+            System.out.print("  Source " + currentSource.getId() + " has receivers [");
             
             if(!entry.getValue().isEmpty()){
                     for(DCNode receiver : entry.getValue()){
                             System.out.print(receiver.getId() + "  ");
                     }
-                    System.out.print("]  ");
+                    System.out.print("]\n");
             } else{
-                    System.out.print(" ]  ");
+                    System.out.print(" ]\n");
             }
     	}
     	System.out.println(" ");
@@ -285,31 +287,31 @@ public class DCGraphExecutor {
 //    		}
 //    	}
     	
-    	System.out.println("Relocate receivers 1st stage...");
-    	List<DCNode> unmovedReceivers = new ArrayList<>();
+    	System.out.println("\nRelocate receivers 1st stage...");
+    	Map<DCNode, DCNode> unmovedReceiversWithSources = new HashMap<>();
     	Set<DCNode> availableGateways = new HashSet<>();
         int averageCost = countAverageCost();
     	for(Map.Entry<DCNode, List<DCNode>> entry : sourceReceiverMap.entrySet()){
+    		DCNode source = entry.getKey();
+//			DCNode gateway = source.fetchGateway(edges).getKey();
+            DCNode gateway = fetchGatewayForNode(source).getKey();
+            availableGateways.add(gateway);
     		if(!entry.getValue().isEmpty()){
-    			DCNode source = entry.getKey();
-//    			DCNode gateway = source.fetchGateway(edges).getKey();
-                        DCNode gateway = fetchGatewayForNode(source).getKey();
-                        availableGateways.add(gateway);
     			System.out.println("Relocate receivers for source = " + source.getId() + " , with gateway = " + gateway.getId());
     			for(DCNode receiver : entry.getValue()){
     				if(receiver.getCost() > averageCost){
     					System.out.println("Relocate receivers  - receiver " + receiver.getId() + " has overvalued mark = " + receiver.getCost());
-                                        System.out.println("Gateway " + gateway.getId() + " has " + gateway.getAvailablePorts() + " available ports");
+                        System.out.println("Gateway " + gateway.getId() + " has " + gateway.getAvailablePorts() + " available ports");
     					if(gateway.getAvailablePorts() > 0){
     						// updating DCEdges
-//                                                Map.Entry<DCNode, DCEdge> receiverGatewayWithEdge = receiver.fetchGateway(edges);
-                                                Map.Entry<DCNode, DCEdge> receiverGatewayWithEdge = fetchGatewayForNode(receiver);
+//                          Map.Entry<DCNode, DCEdge> receiverGatewayWithEdge = receiver.fetchGateway(edges);
+                            Map.Entry<DCNode, DCEdge> receiverGatewayWithEdge = fetchGatewayForNode(receiver);
 
-                                                DCNode receiverGateway = receiverGatewayWithEdge.getKey();
-                                                receiverGateway.releasePort();
-                                                System.out.println("receiverGateway " + receiverGateway.getId() + " after port releasing " + receiverGateway.getAvailablePorts());
-                                                
-                                                DCEdge currentEdge = receiverGatewayWithEdge.getValue();
+                            DCNode receiverGateway = receiverGatewayWithEdge.getKey();
+                            receiverGateway.releasePort();
+                            System.out.println("receiverGateway " + receiverGateway.getId() + " after port releasing " + receiverGateway.getAvailablePorts());
+                            
+                            DCEdge currentEdge = receiverGatewayWithEdge.getValue();
                                                 
     						int edgeWithGatewayIndex = edges.indexOf(currentEdge);
     						DCEdge newEdge = new DCEdge(receiver, gateway, currentEdge.getId(), currentEdge.getWeight());
@@ -319,7 +321,7 @@ public class DCGraphExecutor {
     						System.out.println("Relocate receivers - receiver " + receiver.getId() + " was transfered");
     					} else{
     						System.out.println("Relocate receivers - gateway " + gateway.getId() + " doesn't have available ports");
-    						unmovedReceivers.add(receiver);
+    						unmovedReceiversWithSources.put(receiver, source);
     					}
     					
     				}
@@ -327,18 +329,39 @@ public class DCGraphExecutor {
     		}
     	}
     	
-    	System.out.println("Relocate receivers 2st stage...");
-    	for(DCNode node : unmovedReceivers){
-            System.out.println("Current node " + node.getId());
-            Map<DCNode, Integer> gatewaysWithCost = new HashMap<>();
-//    		List <DCNode> gateways = getAvailableGateways();
-    	    for(DCNode gateway : availableGateways){
-                if(gateway.getAvailablePorts() > 0){
-                    int cost = bfsCall(node, gateway).getCost();
-                    gatewaysWithCost.put(gateway, cost);
-                }
-            }
-            System.out.println("gatewaysWithCost " + gatewaysWithCost);
+    	System.out.println("\nRelocate receivers 2st stage...");
+    	System.out.println("availableGateways size " + availableGateways.size());
+    	for(Map.Entry<DCNode, DCNode> entry : unmovedReceiversWithSources.entrySet()){
+    		System.out.println("Current receiver node " + entry.getKey() + " and corresponding source " + entry.getValue());
+    		SortedMap<Integer, DCNode> gatewaysWithCost = new TreeMap<>();
+    		for(DCNode gateway : availableGateways){
+    			if(gateway.getAvailablePorts() > 0){
+    				System.out.println("for gateway " + gateway.getId());
+    				int cost = bfsCall(gateway, entry.getValue()).getCost();
+    				gatewaysWithCost.put(cost, gateway);
+    			}
+    		}
+    		
+    		if(!gatewaysWithCost.isEmpty()){
+    			System.out.println("inside if");
+    			int minCost = gatewaysWithCost.firstKey();
+        		DCNode targerGateway = gatewaysWithCost.get(minCost);
+        		System.out.println("targerGateway with id = " + targerGateway.getId() + " and cost = " + minCost);
+        		
+                Map.Entry<DCNode, DCEdge> receiverGatewayWithEdge = fetchGatewayForNode(entry.getKey());
+                DCNode receiverGateway = receiverGatewayWithEdge.getKey();
+                receiverGateway.releasePort();
+                System.out.println("receiverGateway " + receiverGateway.getId() + " after port releasing " + receiverGateway.getAvailablePorts());
+                
+                DCEdge currentEdge = receiverGatewayWithEdge.getValue();
+    			int edgeWithGatewayIndex = edges.indexOf(currentEdge);
+    			DCEdge newEdge = new DCEdge(entry.getKey(), targerGateway, currentEdge.getId(), currentEdge.getWeight());
+    			edges.set(edgeWithGatewayIndex, newEdge);
+    			targerGateway.holdPort();
+                                    
+    			System.out.println("Relocate receivers 2st stage - receiver " + entry.getKey().getId() + " was transfered");
+    		}
+    		
     	}
     	
         System.out.println("Topology after optimization:");
@@ -379,10 +402,10 @@ public class DCGraphExecutor {
     			}
     		}
     	}
-    	System.out.println("costSum = " + costSum);
-    	System.out.println("receiversNumber = " + receiversNumber);
+//    	System.out.println("costSum = " + costSum);
+//    	System.out.println("receiversNumber = " + receiversNumber);
     	averageCost = costSum/receiversNumber;
-    	System.out.println("averageCost = " + averageCost);
+    	System.out.println("countAverageCost averageCost = " + averageCost);
     	return averageCost;
     }
     

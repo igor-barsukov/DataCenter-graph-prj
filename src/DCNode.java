@@ -9,7 +9,7 @@ import java.util.Map;
 public class DCNode implements Cloneable{
 	
 	private static int INF = Integer.MAX_VALUE/2;
-	private static int MAX_PORTS_NUMBER = 10;
+	private static int MAX_PORTS_NUMBER = 5;
 	
 	private String nodeId;
 	private int cost;
